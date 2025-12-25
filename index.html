@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>家庭传声筒 (云端版)</title>
+    <title>家庭传声筒</title>
     <style>
         :root { --primary: #07c160; --bg: #f5f5f5; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -25,24 +25,23 @@
 </head>
 <body>
     <div id="login-overlay">
-        <h2>🔒 云端验证</h2><br>
+        <h2>🔒 验证</h2><br>
         <input type="password" id="pwd-input" class="login-input" placeholder="密码">
         <button onclick="doLogin()" class="login-btn">进入</button>
     </div>
-    <div id="header">小代说 (Serverless) <span onclick="clearHistory()" style="font-size:12px;color:#999;float:right">清空</span></div>
+    <div id="header">小代说 <span onclick="clearHistory()" style="font-size:12px;color:#999;float:right;margin-top:4px">清空</span></div>
     <div id="chat-box"></div>
     <div id="input-area">
         <select id="person-select"><option value="">(直接发)</option><option value="悠悠">悠悠</option><option value="玥玥">玥玥</option><option value="老婆">老婆</option></select>
-        <input type="text" id="msg-input" placeholder="输入消息...">
+        <!-- 🟢 修复1：添加 onkeydown 事件支持回车 -->
+        <input type="text" id="msg-input" placeholder="输入消息..." onkeydown="if(event.keyCode==13) sendMsg()">
         <button onclick="sendMsg()" id="send-btn">发送</button>
     </div>
     <script>
-        // 🔴 你的 Worker 地址 (不要填 Pages 的地址，要填 Worker 的！)
-        // 格式: https://tm-api.111312.xyz (后面不要带斜杠)
+        // 🔴 记得填你的Worker地址
         const API_URL = "https://tm-api.111312.xyz"; 
         
         let userPwd = localStorage.getItem("pwd") || "";
-
         if(userPwd) { document.getElementById('login-overlay').classList.add('hidden'); startPolling(); }
 
         function doLogin() {
@@ -80,14 +79,25 @@
             btn.disabled = true;
 
             try {
-                await fetch(API_URL + '/send', {
+                // 🟢 修复2：获取并解析返回结果，如果有错直接弹窗
+                let res = await fetch(API_URL + '/send', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({password: userPwd, text: finalMsg})
                 });
-                input.value = '';
-                loadHistory();
-            } catch (e) { alert("发送失败: " + e); } 
+                
+                let json = await res.json();
+                
+                if (res.status !== 200 || json.error) {
+                    // 这里会把阿里云的错误详情弹出来！
+                    alert("发送失败: " + JSON.stringify(json.detail || json.error));
+                } else {
+                    input.value = '';
+                    loadHistory();
+                }
+            } catch (e) { 
+                alert("网络错误: " + e); 
+            } 
             finally { btn.disabled = false; }
         }
         
