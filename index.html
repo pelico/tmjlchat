@@ -112,7 +112,7 @@
             startPolling();
         }
 
-        function startPolling() { loadHistory(); setInterval(loadHistory, 3000); }
+        function startPolling() { loadHistory(); setInterval(loadHistory, 5000); }
         
         function loadHistory() {
             fetch(API_URL + '/history').then(r=>r.json()).then(data => {
