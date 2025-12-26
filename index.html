@@ -141,7 +141,7 @@
             let rawText = input.value.trim();
             if (!rawText) return;
             
-            let finalMsg = select.value ? select.value + "说：" + rawText : rawText;
+            let finalMsg = select.value ? select.value + "，" + rawText : rawText;
             const btn = document.getElementById('send-btn');
             btn.disabled = true;
 
